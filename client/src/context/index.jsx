@@ -55,7 +55,8 @@ export const StateContextProvider = ({ children }) => {
         image:campaign.image,
         pId: i
     }));
-    return parsedCampaigns;
+     return parsedCampaigns;
+    
   }
 
   const getUserCampaigns = async () => {
@@ -63,7 +64,50 @@ export const StateContextProvider = ({ children }) => {
 
 
     const filteredCampaigns = allCampaigns.filter((campaign) => campaign.owner === address);
+
     return filteredCampaigns
+  }
+
+  const donate = async (pId, amount) => {
+    console.info("pid", pId);
+    try {
+      const data = await contract.call('donateCampaign',[pId], {value: ethers.utils.parseEther(amount)});
+    console.info("contract call success", data);
+    return data
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  //const { mutateAsync: donateCampaign, isLoading } = useContractWrite(contract, "donateCampaign")
+
+//   const donate = async (_id) => {
+//     try {
+//       const data = await donateCampaign({ args: [_id] });
+//       console.info("contract call success", data);
+//       return data
+//     } catch (err) {
+//       console.error("contract call failure", err);
+//     }
+  
+// }
+
+
+  const getDonations = async (_id) => {
+    const donations = await contract.call('getDonators', [_id]);
+ //console.log(donations)
+    const numberOfDonations = donations[0].length;
+
+    const parsedDonations = [];
+
+    for(let i = 0; i < numberOfDonations; i++){
+        parsedDonations.push({
+            donator: donations[0][i],
+            donations: ethers.utils.formatEther(donations[1][i].toString())
+        })
+    }
+    //console.log(parsedDonations)
+    return parsedDonations;
   }
 
   return (
@@ -75,6 +119,8 @@ export const StateContextProvider = ({ children }) => {
         createCampaign: publishCampaign,
         getCampaigns,
         getUserCampaigns,
+        donate,
+        getDonations
       }}
     >
       {children}
